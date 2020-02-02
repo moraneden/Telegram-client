@@ -3,6 +3,8 @@ from telethon import events
 import logging
 from pathlib import Path
 import secrets
+import time
+from telethon.errors import FloodWaitError
 
 
 api_id = secrets.API_ID
@@ -10,7 +12,7 @@ api_hash = secrets.API_HASH
 
 phone = secrets.PHONE
 username = secrets.USERNAME
-searchStr = ['BLURAY', 'HDRIP', 'BRRIP']
+searchStr = ['BLURAY', 'HDRIP', 'BRRIP', '.MKV']
 series = ['דה וויס', 'חתונה ממבט ראשון']
 
 
@@ -26,7 +28,7 @@ class TgClient:
                 media = event.message.media
                 # if media is None:
                     # print('not media: ' + str(event.raw_text))
-                if media is not None:
+                if media is not None and hasattr(media, 'document'):
                     if hasattr(media, 'document'):
                         try:
                             _fileName = media.document.attributes[0]\
@@ -35,6 +37,12 @@ class TgClient:
                                    in searchStr) \
                                     and ('2019' or '2020') in _fileName:
                                 await download(media, _fileName)
+                            else:
+                                await client.send_message('me', 'skipped: ' +
+                                                          _fileName)
+                                logging.info("skipped: " + _fileName)
+
+
 
                          #   if any(x in _fileName for x
                          #          in series) and '720' in _fileName:
@@ -68,6 +76,10 @@ class TgClient:
                     await client.send_message('me', 'DownLoad Done: ' +
                                               str(download_res))
                     logging.info("Download done: " + str(download_res))
+                except FloodWaitError as ex:
+                    logging.log(logging.INFO, '%s: flood wait')
+                    time.sleep(ex.seconds)
+                    await download(media, fileName)
                 except Exception as inst:
                     await client.send_message('me', 'DownLoad Failed!!! '
                                               + fileName)
