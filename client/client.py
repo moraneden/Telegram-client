@@ -43,11 +43,6 @@ class TgClient:
                                 logging.info("skipped: " + _fileName)
 
 
-
-                         #   if any(x in _fileName for x
-                         #          in series) and '720' in _fileName:
-                        #      await download(media, _fileName)
-
                             if event.chat_id == secrets.CHAT_ID:
                                 await download(media, _fileName)
 
