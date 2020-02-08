@@ -12,7 +12,7 @@ api_hash = secrets.API_HASH
 
 phone = secrets.PHONE
 username = secrets.USERNAME
-searchStr = ['BLURAY', 'HDRIP', 'BRRIP', '.MKV']
+searchStr = ['BLURAY', 'HDRIP', 'BRRIP']
 series = ['דה וויס', 'חתונה ממבט ראשון']
 
 
@@ -63,8 +63,8 @@ class TgClient:
                     if my_file.exists():
                         logging.info('DownLoad Skipped, file exists ' +
                                      fileName)
-                        await client.send_message('me', 'DownLoad Skipped, '
-                                                  'file exists - ' + fileName)
+                      #  await client.send_message('me', 'DownLoad Skipped, '
+                       #                           'file exists - ' + fileName)
                         return
                     download_res = await client.download_media(
                         media, 'C:/Users/moran/Downloads/Telegram Desktop')
