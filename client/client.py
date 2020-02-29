@@ -5,6 +5,7 @@ from pathlib import Path
 import secrets
 import time
 from telethon.errors import FloodWaitError
+import os
 
 
 api_id = secrets.API_ID
@@ -14,6 +15,7 @@ phone = secrets.PHONE
 username = secrets.USERNAME
 searchStr = ['BLURAY', 'HDRIP', 'BRRIP']
 series = ['דה וויס', 'חתונה ממבט ראשון']
+DOWNLOAD_DIR = "C:/Plex/Movies"
 
 
 class TgClient:
@@ -26,8 +28,11 @@ class TgClient:
             @client.on(events.NewMessage)
             async def my_event_handler(event):
                 media = event.message.media
-                # if media is None:
-                    # print('not media: ' + str(event.raw_text))
+                _from = None
+                if event.is_channel:
+                    _from = event.chat.title
+                if event.is_private:
+                    _from = event.chat.first_name
                 if media is not None and hasattr(media, 'document'):
                     if hasattr(media, 'document'):
                         try:
@@ -36,38 +41,38 @@ class TgClient:
                             if any(x in _fileName for x
                                    in searchStr) \
                                     and ('2019' or '2020') in _fileName:
-                                await download(media, _fileName)
+                                await download(media, _fileName, _from)
                             else:
-                                await client.send_message('me', 'skipped: ' +
-                                                          _fileName)
-                                logging.info("skipped: " + _fileName)
+                                if event.chat_id == secrets.CHAT_ID:
+                                    await download(media, _fileName, _from)
 
-
-                            if event.chat_id == secrets.CHAT_ID:
-                                await download(media, _fileName)
+                                logging.info('from: ' + _from + " skipped: "
+                                             + _fileName)
 
                         except Exception as inst:
-                            logging.info(media.document.mime_type)
+                            logging.info(media.document.mime_type + ' ' +
+                                         event.chat.title)
                             # await client.send_message('me', event.message)
                     # else:
                         # print('skipping: ' + str(event.raw_text))
                         # await event.forward_to('me')
 
-            async def download(media, fileName):
+            async def download(media, fileName, channel=None):
                 try:
-                    logging.info("Start download: " + fileName)
+                    logging.info("Start download: " + fileName + ' From: ' +
+                                 str(channel))
                     await client.send_message('me', 'Start download: '
                                               + fileName)
-                    my_file = Path('C:/Users/moran/Downloads/Telegram Desktop/'
-                                   + fileName)
+                    my_file = Path(os.path.join(DOWNLOAD_DIR, fileName))
                     if my_file.exists():
                         logging.info('DownLoad Skipped, file exists ' +
                                      fileName)
                       #  await client.send_message('me', 'DownLoad Skipped, '
                        #                           'file exists - ' + fileName)
                         return
-                    download_res = await client.download_media(
-                        media, 'C:/Users/moran/Downloads/Telegram Desktop')
+
+                    download_res = \
+                        await client.download_media(media, DOWNLOAD_DIR)
                     await client.send_message('me', 'DownLoad Done: ' +
                                               str(download_res))
                     logging.info("Download done: " + str(download_res))
