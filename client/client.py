@@ -16,11 +16,15 @@ username = secrets.USERNAME
 searchStr = ['BLURAY', 'HDRIP', 'BRRIP']
 series = ['דה וויס', 'חתונה ממבט ראשון']
 DOWNLOAD_DIR = "C:/Plex/Movies"
+MOVIES_FILE_NAME = 'movies.txt'
 
 
 class TgClient:
 
     def run(self):
+        if not os.path.isfile(MOVIES_FILE_NAME):
+            with open(MOVIES_FILE_NAME, "a+") as f:
+                f.write('*******' + '\n')
         with TelegramClient('name', api_id, api_hash) as client:
             client.send_message('me', 'Server is UP!')
             client.allow_cache = False
@@ -46,9 +50,6 @@ class TgClient:
                                 if event.chat_id == secrets.CHAT_ID:
                                     await download(media, _fileName, _from)
 
-                                logging.info('from: ' + _from + " skipped: "
-                                             + _fileName)
-
                         except Exception as inst:
                             logging.info(media.document.mime_type + ' ' +
                                          event.chat.title)
@@ -63,13 +64,20 @@ class TgClient:
                                  str(channel))
                     await client.send_message('me', 'Start download: '
                                               + fileName)
-                    my_file = Path(os.path.join(DOWNLOAD_DIR, fileName))
-                    if my_file.exists():
-                        logging.info('DownLoad Skipped, file exists ' +
-                                     fileName)
-                      #  await client.send_message('me', 'DownLoad Skipped, '
-                       #                           'file exists - ' + fileName)
-                        return
+
+                    with open(MOVIES_FILE_NAME, 'r', encoding='utf-8') as f:
+                        _movies = f.readlines()
+                        if fileName in _movies:
+                            logging.info('DownLoad Skipped, file exists ' +
+                                         fileName)
+                            await client.send_message('me',
+                                                      'DownLoad Skipped, '
+                                                      'file exists '
+                                                      + fileName)
+                            return
+
+                    with open(MOVIES_FILE_NAME, 'a', encoding='utf-8') as file:
+                        file.write(f'\n{fileName}')
 
                     download_res = \
                         await client.download_media(media, DOWNLOAD_DIR)
