@@ -51,8 +51,9 @@ class TgClient:
                                     await download(media, _fileName, _from)
 
                         except Exception as inst:
-                            logging.info(media.document.mime_type + ' ' +
+                            logging.exception(media.document.mime_type + ' ' +
                                          event.chat.title)
+                            logging.exception(str(inst))
                             # await client.send_message('me', event.message)
                     # else:
                         # print('skipping: ' + str(event.raw_text))
